@@ -1,0 +1,92 @@
+name: SoniqViz 4K/1080p Cloud Visualizer Video Renderer
+
+on:
+  workflow_dispatch:
+    inputs:
+      song_title:
+        description: 'Song / Track Title'
+        required: false
+        default: 'Synthwave Odyssey'
+      artist_name:
+        description: 'Artist Name'
+        required: false
+        default: 'Neon Horizon'
+      audio_url:
+        description: 'Direct Audio URL (MP3/WAV/OGG) or leave empty for default synth'
+        required: false
+        default: ''
+      aspect_ratio:
+        description: 'Aspect Ratio (16:9, 9:16, 1:1)'
+        required: false
+        default: '16:9'
+      resolution:
+        description: 'Output Resolution (1080p, 4K, 720p)'
+        required: false
+        default: '1080p'
+      fps:
+        description: 'Frames Per Second (30 or 60)'
+        required: false
+        default: '60'
+      duration:
+        description: 'Duration in seconds (e.g. 30, 60, or full)'
+        required: false
+        default: '30'
+      config_json:
+        description: 'Visualizer Configuration JSON'
+        required: false
+        default: '{}'
+      lyrics_json:
+        description: 'Synchronized Lyrics JSON'
+        required: false
+        default: '[]'
+
+  repository_dispatch:
+    types: [render-visualizer]
+
+jobs:
+  render-video:
+    name: 🎨 Render SoniqViz MP4 Video
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: 📥 Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 🎬 Install FFmpeg with H.264 & AAC Support
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg libfontconfig1 libgl1-mesa-glx
+
+      - name: 📦 Install Rendering Dependencies
+        run: |
+          npm ci || npm install
+
+      - name: 🚀 Execute High-Speed Video Rendering Engine
+        id: render
+        env:
+          INPUT_SONG_TITLE: ${{ github.event.inputs.song_title || github.event.client_payload.song_title || 'Synthwave Odyssey' }}
+          INPUT_ARTIST_NAME: ${{ github.event.inputs.artist_name || github.event.client_payload.artist_name || 'Neon Horizon' }}
+          INPUT_AUDIO_URL: ${{ github.event.inputs.audio_url || github.event.client_payload.audio_url || '' }}
+          INPUT_ASPECT_RATIO: ${{ github.event.inputs.aspect_ratio || github.event.client_payload.aspect_ratio || '16:9' }}
+          INPUT_RESOLUTION: ${{ github.event.inputs.resolution || github.event.client_payload.resolution || '1080p' }}
+          INPUT_FPS: ${{ github.event.inputs.fps || github.event.client_payload.fps || '60' }}
+          INPUT_DURATION: ${{ github.event.inputs.duration || github.event.client_payload.duration || '30' }}
+          INPUT_CONFIG_JSON: ${{ github.event.inputs.config_json || github.event.client_payload.config_json || '{}' }}
+          INPUT_LYRICS_JSON: ${{ github.event.inputs.lyrics_json || github.event.client_payload.lyrics_json || '[]' }}
+        run: |
+          node scripts/github-render-engine.cjs
+
+      - name: 📤 Upload Rendered MP4 Video Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: soniqviz-rendered-video-${{ github.run_id }}
+          path: output/*.mp4
+          retention-days: 14
+          if-no-files-found: error
