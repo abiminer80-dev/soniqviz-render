@@ -56,8 +56,7 @@ jobs:
       - name: 🟢 Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
 
       - name: 🎬 Install FFmpeg with H.264 & AAC Support
         run: |
@@ -66,7 +65,11 @@ jobs:
 
       - name: 📦 Install Rendering Dependencies
         run: |
-          npm ci || npm install
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          elif [ -f "package.json" ]; then
+            npm install --no-audit --no-fund
+          fi
 
       - name: 🚀 Execute High-Speed Video Rendering Engine
         id: render
