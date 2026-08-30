@@ -1,0 +1,11 @@
+{
+  "name": "soniqviz-github-cloud-renderer",
+  "version": "1.0.0",
+  "description": "Serverless 4K 60FPS Video Visualizer Cloud Renderer powered by GitHub Actions",
+  "main": "scripts/github-render-engine.cjs",
+  "scripts": {
+    "render": "node scripts/github-render-engine.cjs"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
